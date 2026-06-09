@@ -1,0 +1,5 @@
+# Spec Kit (local tooling, not part of the agent)
+.specify/
+.github/agents/speckit.*
+.github/prompts/speckit.*
+.vscode/
