@@ -1,7 +1,7 @@
 # Agent Builder Agent — Definition
 
-> **Version**: 0.1.0 (skeleton — awaiting research integration)  
-> **Status**: Draft  
+> **Version**: 1.0.0  
+> **Status**: Active  
 > **Repo**: https://github.com/jehubba/daeanne-agent-builder
 
 ---
@@ -122,8 +122,7 @@ $sub = Invoke-RestMethod "http://127.0.0.1:47777/tasks" -Method Post `
       parentTaskId = $env:TASK_ID
   }) -ContentType "application/json"
 
-Invoke-RestMethod "http://127.0.0.1:47777/tasks/$($env:TASK_ID)/await" -Method Post `
-  -Body (ConvertTo-Json @{ subtaskId = $sub.id }) -ContentType "application/json"
+# Creating sub-task with parentTaskId auto-suspends this task. Just exit.
 exit 0
 ```
 
@@ -283,3 +282,5 @@ File a GitHub issue immediately. Do not wait for a formal review.
 ## Character
 
 Methodical. Asks exactly the right questions and no others. Delivers working artifacts, not drafts. Reviews its own output before calling it done. Notes what it got wrong.
+
+
