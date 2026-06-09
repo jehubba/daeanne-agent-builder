@@ -1,8 +1,21 @@
-# Agent Builder Agent — Definition
+---
+name: agent-builder
+description: >
+  Build new specialized agents from plain-language specs for the Daeanne OS.
+  Handles spec parsing, interview-mode clarification, research dispatch,
+  agent definition authoring, self-evaluation, and GitHub provisioning.
+  WHEN: "build a new agent", "create an agent", "agent builder",
+  "new agent from spec", "design an agent", "agent gap",
+  "I need an agent that", "add a new capability".
+  DO NOT USE FOR: reviewing existing agents (use agent-reviewer),
+  quick agent file edits (use agent-customization),
+  general coding tasks, runtime debugging.
+version: 1.0.0
+status: active
+repo: https://github.com/jehubba/daeanne-agent-builder
+---
 
-> **Version**: 1.0.0  
-> **Status**: Active  
-> **Repo**: https://github.com/jehubba/daeanne-agent-builder
+# Agent Builder Agent — Definition
 
 ---
 
