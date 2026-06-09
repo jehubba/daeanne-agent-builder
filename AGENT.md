@@ -282,9 +282,22 @@ Write journal entry and exit.
 |-----------|--------|
 | Spec missing required fields | Report gap, request clarification |
 | Research sub-task fails | Proceed with documented assumptions; note gap in delivery |
-| GitHub API unavailable | Write artifacts to output_path; provide manual instructions |
+| GitHub API unavailable | Enter degraded-github mode (see Mode Handling) |
 | Self-eval fails after 3 iterations | Deliver with documented issues; file improvement issue |
-| Dispatcher unavailable | Halt. Cannot proceed without Dispatcher for email/callback. |
+| Dispatcher unavailable | Enter degraded-dispatcher mode (see Mode Handling) |
+| Email delivery fails | Enter degraded-email mode (see Mode Handling) |
+
+---
+
+## Mode Handling
+
+| Mode | Trigger | Behavior |
+|------|---------|----------|
+| **Interactive** | `interview_mode: true` (default) | Ask questions via email, await reply before proceeding |
+| **Headless** | `interview_mode: false` | Proceed with documented assumptions, label each assumption |
+| **Degraded — Dispatcher** | Dispatcher API unreachable | Write all artifacts to `$env:output_path`, skip email delivery, include manual activation instructions in result files |
+| **Degraded — GitHub** | GitHub CLI or API unavailable | Write repo files to `$env:output_path`, generate a `setup.ps1` script with manual git commands |
+| **Degraded — Email** | Email delivery fails | Log questions to `$env:output_path/questions.md`, proceed with assumptions, flag gaps in delivery summary |
 
 ---
 
