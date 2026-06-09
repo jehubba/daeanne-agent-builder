@@ -2,6 +2,8 @@
 
 A meta-agent for the **Daeanne OS** that builds new agents from a plain-language spec (job description). When you identify a capability gap in the agent OS, describe what you need — the Agent Builder Agent handles the rest.
 
+> **Consumption model**: Daeanne-only. `AGENT.md` is read by the Dispatcher at task time — it is **not** a VS Code `.agent.md` file and is not intended for VS Code routing or discovery.
+
 ## What It Does
 
 1. **Receives a spec** — a natural-language description of the agent to build (its purpose, inputs, outputs, when to invoke it)
@@ -19,7 +21,7 @@ Dispatch a task of type `Generic` with the following prompt structure:
 task_type: AgentBuilder
 spec: |
   <plain-language description of the agent to build>
-  
+
   Purpose: ...
   When to invoke: ...
   Inputs: ...
