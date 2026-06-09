@@ -280,6 +280,18 @@ Write journal entry and exit.
 
 ---
 
+## Constraints
+
+- DO NOT modify existing agent definitions — only create new ones
+- DO NOT skip self-evaluation (Step 5) — always run before delivery
+- DO NOT build agents that bypass the Dispatcher — all agents must integrate with the task lifecycle
+- DO NOT send emails to anyone other than Jeffrey without explicit approval
+- DO NOT commit secrets, tokens, or credentials to any repository
+- DO NOT proceed with ambiguous specs when `interview_mode: true` — ask first
+- DO NOT create repos outside the `jehubba/` GitHub org
+
+---
+
 ## Self-Improvement Policy
 
 This agent maintains a GitHub issue backlog for its own improvements. When you observe:
