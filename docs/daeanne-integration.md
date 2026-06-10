@@ -36,11 +36,11 @@ $task = Invoke-RestMethod "http://127.0.0.1:47777/tasks" `
 
 ### When to dispatch vs. inline
 
-| Situation | Action |
-|-----------|--------|
-| Building a new agent | Dispatch Agent Builder Agent |
-| Reviewing/auditing an existing agent | Invoke `agent-reviewer` skill directly |
-| Quick agent edits | Do inline — no need for Agent Builder |
+| Situation                                   | Action                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------ |
+| Building a new agent                        | Dispatch Agent Builder Agent                                       |
+| Reviewing/auditing an existing agent        | Invoke `agent-reviewer` skill directly                             |
+| Quick agent edits                           | Do inline — no need for Agent Builder                              |
 | New agent replaces or wraps an existing one | Dispatch Agent Builder Agent with context on what's being replaced |
 
 ---
@@ -94,16 +94,32 @@ This requires the follow-up email to reference the original task (via reply-to t
 
 ## Self-Evaluation Loop
 
-The Agent Builder Agent runs its output through the `self-eval-loop` skill before delivering. The evaluation criteria are:
+The Agent Builder Agent uses a **handoff cycle** to evaluate its output before delivery. Instead of inline self-evaluation, Step 5 dispatches Code Gardener as a sub-task via the Dispatcher to review the built agent's repo using the agent-reviewer skill.
+
+### Normal mode (handoff cycle)
+
+1. Step 5a verifies all artifacts are committed and pushed
+2. Step 5b dispatches Code Gardener in Analysis Only mode, then self-suspends
+3. On callback, Step 5c parses the 8 agent-reviewer dimension scores
+4. If any dimension scores ≤ 2 (critical finding) and cycle count < 2, Step 5d dispatches Refactor Executor to fix the issues
+5. After fixes, Code Gardener is re-dispatched for verification (at most 2 cycles)
+6. Step 5e writes `docs/build-review.md` to the built agent's repo with the review outcome
+
+### Degraded mode (inline fallback)
+
+If the Dispatcher is unavailable or Code Gardener fails, the Agent Builder falls back to an inline 7-criteria evaluation:
 
 1. **Completeness** — Does the agent definition cover all required behaviors?
-2. **Scope precision** — Are the `WHEN` triggers specific enough? Vague enough for edge cases?
-3. **Environment fidelity** — Are all environment assumptions correct per `docs/environment-context.md`?
-4. **Integration correctness** — Does the Dispatcher interaction code use the correct patterns?
-5. **Tone/character alignment** — Does the agent's character match the Daeanne OS aesthetic?
-6. **Testability** — Is it clear how to verify the agent works correctly?
+2. **WHEN triggers** — Are they specific enough? Non-overlapping with existing skills?
+3. **DO NOT USE FOR** — At least two clear anti-patterns stated?
+4. **Environment fidelity** — Are all environment assumptions correct per `docs/environment-context.md`?
+5. **Dispatcher correctness** — Does the integration code use the correct patterns?
+6. **Tone alignment** — Does the agent's character match the Daeanne OS aesthetic?
+7. **Testability** — Is it clear how to verify the agent works correctly?
 
-If the self-eval identifies issues, the agent iterates before delivering.
+The degraded mode is recorded in `docs/build-review.md` with `Mode: degraded_inline`.
+
+See `docs/handoff-cycle-spec.md` for the full handoff pattern reference.
 
 ---
 
@@ -127,11 +143,11 @@ Daeanne should periodically review open issues on this repo as part of system ma
 
 Once the Agent Builder Agent is validated and active, add the following to Daeanne's agent profile under the **Tool Use Policy** or **Orchestration Pipeline** sections:
 
-```
+````
 ## Agent Builder Agent
 
-When you identify a gap in the agent OS — a capability that doesn't exist and would 
-require a new specialized agent — dispatch the Agent Builder Agent rather than building 
+When you identify a gap in the agent OS — a capability that doesn't exist and would
+require a new specialized agent — dispatch the Agent Builder Agent rather than building
 the agent inline.
 
 Dispatch trigger: Any request requiring a new reusable agent to be created.
@@ -143,9 +159,12 @@ $body = @{
 } | ConvertTo-Json
 $task = Invoke-RestMethod "http://127.0.0.1:47777/tasks" `
     -Method Post -Body $body -ContentType "application/json"
-```
+````
 
 The agent will handle research, spec clarification, agent authoring, self-evaluation,
 and GitHub provisioning. Your job is to provide a clear spec and respond to interview
 questions if asked.
+
+```
+
 ```
