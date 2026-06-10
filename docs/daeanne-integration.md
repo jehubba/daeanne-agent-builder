@@ -36,11 +36,11 @@ $task = Invoke-RestMethod "http://127.0.0.1:47777/tasks" `
 
 ### When to dispatch vs. inline
 
-| Situation | Action |
-|-----------|--------|
-| Building a new agent | Dispatch Agent Builder Agent |
-| Reviewing/auditing an existing agent | Invoke `agent-reviewer` skill directly |
-| Quick agent edits | Do inline — no need for Agent Builder |
+| Situation                                   | Action                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------ |
+| Building a new agent                        | Dispatch Agent Builder Agent                                       |
+| Reviewing/auditing an existing agent        | Invoke `agent-reviewer` skill directly                             |
+| Quick agent edits                           | Do inline — no need for Agent Builder                              |
 | New agent replaces or wraps an existing one | Dispatch Agent Builder Agent with context on what's being replaced |
 
 ---
@@ -143,11 +143,11 @@ Daeanne should periodically review open issues on this repo as part of system ma
 
 Once the Agent Builder Agent is validated and active, add the following to Daeanne's agent profile under the **Tool Use Policy** or **Orchestration Pipeline** sections:
 
-```
+````
 ## Agent Builder Agent
 
-When you identify a gap in the agent OS — a capability that doesn't exist and would 
-require a new specialized agent — dispatch the Agent Builder Agent rather than building 
+When you identify a gap in the agent OS — a capability that doesn't exist and would
+require a new specialized agent — dispatch the Agent Builder Agent rather than building
 the agent inline.
 
 Dispatch trigger: Any request requiring a new reusable agent to be created.
@@ -159,9 +159,12 @@ $body = @{
 } | ConvertTo-Json
 $task = Invoke-RestMethod "http://127.0.0.1:47777/tasks" `
     -Method Post -Body $body -ContentType "application/json"
-```
+````
 
 The agent will handle research, spec clarification, agent authoring, self-evaluation,
 and GitHub provisioning. Your job is to provide a clear spec and respond to interview
 questions if asked.
+
+```
+
 ```

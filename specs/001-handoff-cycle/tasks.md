@@ -17,8 +17,8 @@
 
 **Purpose**: Branch creation and environment reference update
 
-- [X] T001 Create feature branch `feat/6-handoff-cycle` from `main`
-- [X] T002 Add `docs/handoff-cycle-spec.md` to the Agent Builder's own Environment section doc list in `AGENT.md`
+- [x] T001 Create feature branch `feat/6-handoff-cycle` from `main`
+- [x] T002 Add `docs/handoff-cycle-spec.md` to the Agent Builder's own Environment section doc list in `AGENT.md`
 
 ---
 
@@ -28,8 +28,8 @@
 
 **âš ï¸ CRITICAL**: No user story work can begin until this phase is complete
 
-- [X] T003 [TDD-AGENT] Write seam test: verify AGENT.md Step 5 section heading and substep structure (5aâ€“5e) exist after implementation â€” test by parsing headings in `AGENT.md`
-- [X] T004 Refactor current Step 5 in `AGENT.md` â€” rename to "Step 5 â€” Quality review (handoff cycle)" and add substep skeleton (### Step 5a through ### Step 5e) with placeholder descriptions
+- [x] T003 [TDD-AGENT] Write seam test: verify AGENT.md Step 5 section heading and substep structure (5aâ€“5e) exist after implementation â€” test by parsing headings in `AGENT.md`
+- [x] T004 Refactor current Step 5 in `AGENT.md` â€” rename to "Step 5 â€” Quality review (handoff cycle)" and add substep skeleton (### Step 5a through ### Step 5e) with placeholder descriptions
 
 **Checkpoint**: AGENT.md has the new Step 5 skeleton â€” substeps ready to be filled
 
@@ -43,14 +43,14 @@
 
 ### Tests for User Story 1
 
-- [X] T005 [TDD-AGENT] [US1] Write contract test: verify Step 5b dispatch prompt matches Contract 1 schema in `specs/001-handoff-cycle/contracts/dispatcher-handoffs.md`
-- [X] T006 [TDD-AGENT] [US1] Write contract test: verify Step 5c callback parsing logic matches the dimension score extraction rule in Contract 1
+- [x] T005 [TDD-AGENT] [US1] Write contract test: verify Step 5b dispatch prompt matches Contract 1 schema in `specs/001-handoff-cycle/contracts/dispatcher-handoffs.md`
+- [x] T006 [TDD-AGENT] [US1] Write contract test: verify Step 5c callback parsing logic matches the dimension score extraction rule in Contract 1
 
 ### Implementation for User Story 1
 
-- [X] T007 [US1] Write Step 5a (commit verification) in `AGENT.md` â€” local PowerShell code block verifying artifacts are committed and pushed (no Dispatcher call; this is a pre-flight check before dispatch)
-- [X] T008 [US1] Write Step 5b (dispatch Code Gardener) in `AGENT.md` â€” PowerShell code block per Contract 1 (POST to `$env:DISPATCHER_URL/tasks`, self-suspend via `/await`, `exit 0`)
-- [X] T009 [US1] Write Step 5c (evaluate findings) in `AGENT.md` â€” callback reading, dimension score parsing, decision matrix table (all > 2 â†’ deliver, any â‰¤ 2 â†’ fix, CG failed â†’ degrade)
+- [x] T007 [US1] Write Step 5a (commit verification) in `AGENT.md` â€” local PowerShell code block verifying artifacts are committed and pushed (no Dispatcher call; this is a pre-flight check before dispatch)
+- [x] T008 [US1] Write Step 5b (dispatch Code Gardener) in `AGENT.md` â€” PowerShell code block per Contract 1 (POST to `$env:DISPATCHER_URL/tasks`, self-suspend via `/await`, `exit 0`)
+- [x] T009 [US1] Write Step 5c (evaluate findings) in `AGENT.md` â€” callback reading, dimension score parsing, decision matrix table (all > 2 â†’ deliver, any â‰¤ 2 â†’ fix, CG failed â†’ degrade)
 
 **Checkpoint**: Step 5 dispatches Code Gardener and correctly evaluates the callback. No fix cycle yet â€” critical findings result in delivery with caveats.
 
@@ -64,14 +64,14 @@
 
 ### Tests for User Story 2
 
-- [X] T010 [TDD-AGENT] [US2] Write contract test: verify Step 5d dispatch prompt matches Contract 3 schema in `specs/001-handoff-cycle/contracts/dispatcher-handoffs.md`
-- [X] T011 [TDD-AGENT] [US2] Write integration test: verify the review-fix loop terminates after 2 cycles when critical findings persist (mock callbacks)
+- [x] T010 [TDD-AGENT] [US2] Write contract test: verify Step 5d dispatch prompt matches Contract 3 schema in `specs/001-handoff-cycle/contracts/dispatcher-handoffs.md`
+- [x] T011 [TDD-AGENT] [US2] Write integration test: verify the review-fix loop terminates after 2 cycles when critical findings persist (mock callbacks)
 
 ### Implementation for User Story 2
 
-- [X] T012 [US2] Write Step 5d (dispatch Refactor Executor) in `AGENT.md` â€” PowerShell code block per Contract 3, conditional on critical findings + cycle < 2
-- [X] T013 [US2] Add cycle counter and loop-back logic to Step 5c in `AGENT.md` â€” increment cycle on resumption from fix, re-dispatch Code Gardener (Step 5b)
-- [X] T014 [US2] Add no-progress detection to Step 5c in `AGENT.md` â€” compare current scores to previous cycle's scores, terminate if unchanged (FR-011)
+- [x] T012 [US2] Write Step 5d (dispatch Refactor Executor) in `AGENT.md` â€” PowerShell code block per Contract 3, conditional on critical findings + cycle < 2
+- [x] T013 [US2] Add cycle counter and loop-back logic to Step 5c in `AGENT.md` â€” increment cycle on resumption from fix, re-dispatch Code Gardener (Step 5b)
+- [x] T014 [US2] Add no-progress detection to Step 5c in `AGENT.md` â€” compare current scores to previous cycle's scores, terminate if unchanged (FR-011)
 
 **Checkpoint**: Full review-fix loop works with 2-cycle cap and no-progress detection
 
@@ -85,13 +85,13 @@
 
 ### Tests for User Story 3
 
-- [X] T015 [TDD-AGENT] [US3] Write integration test: verify Dispatcher connection failure triggers inline evaluation fallback
+- [x] T015 [TDD-AGENT] [US3] Write integration test: verify Dispatcher connection failure triggers inline evaluation fallback
 
 ### Implementation for User Story 3
 
-- [X] T016 [US3] Add try/catch around the Dispatcher dispatch in Step 5b of `AGENT.md` â€” on failure, jump to degraded inline evaluation
-- [X] T017 [US3] Add Code Gardener failure handling to Step 5c in `AGENT.md` â€” if callback status is `Failed` or response unparseable, fall back to inline eval
-- [X] T018 [US3] Move current 7-criteria check to a "Degraded mode fallback" note under Step 5 in `AGENT.md` â€” preserve exact criteria, label as fallback
+- [x] T016 [US3] Add try/catch around the Dispatcher dispatch in Step 5b of `AGENT.md` â€” on failure, jump to degraded inline evaluation
+- [x] T017 [US3] Add Code Gardener failure handling to Step 5c in `AGENT.md` â€” if callback status is `Failed` or response unparseable, fall back to inline eval
+- [x] T018 [US3] Move current 7-criteria check to a "Degraded mode fallback" note under Step 5 in `AGENT.md` â€” preserve exact criteria, label as fallback
 
 **Checkpoint**: Agent Builder always delivers â€” Dispatcher down or CG failure triggers inline eval with documented caveat
 
@@ -105,12 +105,12 @@
 
 ### Tests for User Story 4
 
-- [X] T019 [TDD-AGENT] [US4] Write contract test: verify build-review.md output matches Contract 4 schema in `specs/001-handoff-cycle/contracts/dispatcher-handoffs.md`
+- [x] T019 [TDD-AGENT] [US4] Write contract test: verify build-review.md output matches Contract 4 schema in `specs/001-handoff-cycle/contracts/dispatcher-handoffs.md`
 
 ### Implementation for User Story 4
 
-- [X] T020 [US4] Write Step 5e (record review outcome) in `AGENT.md` â€” PowerShell code block generating `docs/build-review.md` per Contract 4 schema, git add/commit/push
-- [X] T021 [US4] Add degraded-mode variant to Step 5e in `AGENT.md` â€” when inline eval was used, write `Mode: degraded_inline` and `Cycles: 0`
+- [x] T020 [US4] Write Step 5e (record review outcome) in `AGENT.md` â€” PowerShell code block generating `docs/build-review.md` per Contract 4 schema, git add/commit/push
+- [x] T021 [US4] Add degraded-mode variant to Step 5e in `AGENT.md` â€” when inline eval was used, write `Mode: degraded_inline` and `Cycles: 0`
 
 **Checkpoint**: `docs/build-review.md` generated for both normal and degraded builds
 
@@ -124,12 +124,12 @@
 
 ### Tests for User Story 5
 
-- [X] T022 [TDD-AGENT] [US5] Write contract test: verify the agent template (Step 4a) includes Integration Points section matching Contract 5 structure
+- [x] T022 [TDD-AGENT] [US5] Write contract test: verify the agent template (Step 4a) includes Integration Points section matching Contract 5 structure
 
 ### Implementation for User Story 5
 
-- [X] T023 [US5] Add Integration Points section (outbound + inbound handoff tables) to the agent template in Step 4a of `AGENT.md` â€” per Contract 5
-- [X] T024 [US5] Add `docs/handoff-cycle-spec.md` to the conditional reads in the built agent template's Environment section (Step 4a of `AGENT.md`) â€” consult when spec requires multi-agent collaboration
+- [x] T023 [US5] Add Integration Points section (outbound + inbound handoff tables) to the agent template in Step 4a of `AGENT.md` â€” per Contract 5
+- [x] T024 [US5] Add `docs/handoff-cycle-spec.md` to the conditional reads in the built agent template's Environment section (Step 4a of `AGENT.md`) â€” consult when spec requires multi-agent collaboration
 
 **Checkpoint**: Built agents that need handoffs get proper Integration Points documentation
 
@@ -139,12 +139,12 @@
 
 **Purpose**: Integration guide update, validation, cleanup
 
-- [X] T025 [P] Update Self-Evaluation Loop section in `docs/daeanne-integration.md` to reference the new handoff cycle pattern instead of the inline eval description
-- [X] T026 Run Code Gardener in Analysis Only mode against this repo's `AGENT.md` â€” verify all 8 agent-reviewer dimensions score â‰¥ 3 (quickstart scenario 4)
-- [X] T027 Run quickstart.md validation scenario 1 (happy path) if Dispatcher is available
-- [X] T028 Run quickstart.md validation scenario 2 (fix cycle) if Dispatcher is available â€” verify RE dispatch and re-review
-- [X] T029 Run quickstart.md validation scenario 3 (degraded mode) â€” simulate Dispatcher unavailability, verify inline fallback
-- [X] T030 Create PR `feat/6-handoff-cycle` → `main` with body referencing `Closes #6`
+- [x] T025 [P] Update Self-Evaluation Loop section in `docs/daeanne-integration.md` to reference the new handoff cycle pattern instead of the inline eval description
+- [x] T026 Run Code Gardener in Analysis Only mode against this repo's `AGENT.md` â€” verify all 8 agent-reviewer dimensions score â‰¥ 3 (quickstart scenario 4)
+- [x] T027 Run quickstart.md validation scenario 1 (happy path) if Dispatcher is available
+- [x] T028 Run quickstart.md validation scenario 2 (fix cycle) if Dispatcher is available â€” verify RE dispatch and re-review
+- [x] T029 Run quickstart.md validation scenario 3 (degraded mode) â€” simulate Dispatcher unavailability, verify inline fallback
+- [x] T030 Create PR `feat/6-handoff-cycle` → `main` with body referencing `Closes #6`
 
 ---
 
@@ -217,4 +217,3 @@ T025 and T026 can run in parallel (different files)
 5. US4 â†’ Build review persisted â†’ observable builds
 6. US5 â†’ Handoff guidance in template â†’ built agents can handoff too
 7. Polish â†’ integration guide updated, validated, PR merged
-

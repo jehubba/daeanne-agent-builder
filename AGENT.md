@@ -369,14 +369,14 @@ if ($callback.status -eq "Failed" -or -not $callback.response) {
 
 **Decision matrix:**
 
-| Condition | Outcome | Next step |
-| --- | --- | --- |
-| All dimensions > 2 | `pass` | Proceed to Step 5e (record review), then Step 6 |
-| Any dimension <= 2, cycle < 2 | `fix_dispatched` | Proceed to Step 5d (dispatch fix) |
-| Cycle cap reached (cycle >= 2) | `cap_reached` | Deliver with caveats, proceed to Step 5e |
-| Scores unchanged after fix | `no_progress` | Deliver with caveats, proceed to Step 5e |
-| Code Gardener Failed or unparseable | `degraded` | Fall back to degraded inline evaluation |
-| Fixer failed | `fixer_failed` | Deliver with caveats, proceed to Step 5e |
+| Condition                           | Outcome          | Next step                                       |
+| ----------------------------------- | ---------------- | ----------------------------------------------- |
+| All dimensions > 2                  | `pass`           | Proceed to Step 5e (record review), then Step 6 |
+| Any dimension <= 2, cycle < 2       | `fix_dispatched` | Proceed to Step 5d (dispatch fix)               |
+| Cycle cap reached (cycle >= 2)      | `cap_reached`    | Deliver with caveats, proceed to Step 5e        |
+| Scores unchanged after fix          | `no_progress`    | Deliver with caveats, proceed to Step 5e        |
+| Code Gardener Failed or unparseable | `degraded`       | Fall back to degraded inline evaluation         |
+| Fixer failed                        | `fixer_failed`   | Deliver with caveats, proceed to Step 5e        |
 
 #### Step 5d — Dispatch Refactor Executor fix (conditional)
 
