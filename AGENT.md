@@ -34,6 +34,7 @@ You operate exclusively within the Daeanne OS. Before doing any work, you must h
 - `docs/environment-context.md` — full environment reference (canonical source for all runtime values)
 - `docs/daeanne-integration.md` — how to interact with Daeanne and the Dispatcher
 - `docs/research-findings.md` — patterns and best practices (consult for design decisions)
+- `docs/handoff-cycle-spec.md` — handoff patterns for multi-agent collaboration (review-fix, sequential, fan-out)
 
 ### Runtime variables
 
@@ -199,6 +200,18 @@ description: >
 
 <How it calls Daeanne, Dispatcher, GitHub, etc.>
 
+### Outbound handoffs
+
+| Target agent | When dispatched     | Prompt structure  | Expected callback |
+| ------------ | ------------------- | ----------------- | ----------------- |
+| {agent name} | {trigger condition} | {prompt template} | {callback schema} |
+
+### Inbound handoffs
+
+| Source agent | When received       | What this agent does  |
+| ------------ | ------------------- | --------------------- |
+| {agent name} | {trigger condition} | {behavior on receipt} |
+
 ## Self-Evaluation Criteria
 
 <How to verify it worked correctly>
@@ -230,9 +243,216 @@ Write `docs/activation-instructions.md` explaining:
 - What to add to Daeanne's agent profile
 - Any Dispatcher configuration needed
 
-### Step 5 — Self-evaluation
+### Step 5 — Quality review (handoff cycle)
 
-Invoke the `self-eval-loop` skill against the generated agent definition. Evaluate against these criteria:
+Dispatch a Code Gardener review of the built agent's repo via the Dispatcher. If critical findings are found, dispatch a Refactor Executor fix cycle. The review-fix loop runs at most 2 cycles. If the Dispatcher or Code Gardener is unavailable, fall back to the degraded inline evaluation.
+
+Initialize tracking state:
+
+```powershell
+$cycle = 0
+$previousScores = @{}
+$reviewOutcome = $null      # pass | fix_dispatched | cap_reached | no_progress | fixer_failed | degraded
+$totalIssuesFiled = 0
+$totalIssuesResolved = 0
+$criticalDimsList = @()
+$finalScores = @{}
+```
+
+#### Step 5a — Verify artifacts are committed and pushed
+
+Before dispatching the review, confirm all generated files are committed and pushed to the built agent's repo.
+
+```powershell
+cd <repo dir>
+$status = git status --porcelain
+if ($status) {
+    git add .
+    git commit -m "chore: ensure all artifacts committed before review"
+    git push origin main
+}
+```
+
+#### Step 5b — Dispatch Code Gardener review
+
+Dispatch Code Gardener as a sub-task via the Dispatcher. The review runs in Analysis Only mode using the agent-reviewer skill.
+
+```powershell
+try {
+    $review = Invoke-RestMethod "$env:DISPATCHER_URL/tasks" -Method Post `
+      -Body (ConvertTo-Json @{
+          type         = "Code"
+          prompt       = "Run in Analysis Only mode against the repository jehubba/daeanne-<agent-name>.`n`nFocus on agent file quality using the agent-reviewer skill.`nProduce findings as GitHub issues on the target repo.`nDo NOT plan or execute refactoring — only analyze and report.`n`nTarget: jehubba/daeanne-<agent-name>`nMode: Analysis Only"
+          parentTaskId = $env:TASK_ID
+      }) -ContentType "application/json"
+
+    # Self-suspend and await callback (Contract 2)
+    Invoke-RestMethod "$env:DISPATCHER_URL/tasks/$($env:TASK_ID)/await" -Method Post `
+      -Body (ConvertTo-Json @{ subtaskId = $review.id }) `
+      -ContentType "application/json"
+
+    exit 0
+} catch {
+    # Dispatcher unreachable — fall back to degraded inline evaluation
+    Write-Warning "Dispatcher unavailable: $_. Falling back to inline evaluation."
+    $reviewOutcome = "degraded"
+    # Jump to degraded mode fallback (Step 5c will detect this)
+}
+```
+
+#### Step 5c — Evaluate findings
+
+On resumption, read the callback and parse dimension scores. The 8 agent-reviewer dimensions are:
+
+1. Description Quality
+2. Frontmatter Correctness
+3. Tool Minimality
+4. Scope & Focus
+5. Progressive Loading
+6. Cross-Reference Integrity
+7. Anti-Pattern Detection
+8. Cross-Scope Consistency
+
+```powershell
+# Read callback JSON
+$callbackFile = Get-ChildItem "$env:output_path\callbacks\*.json" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$callback = Get-Content $callbackFile.FullName -Raw | ConvertFrom-Json
+
+if ($callback.status -eq "Failed" -or -not $callback.response) {
+    # Code Gardener Failed or unparseable — fallback to degraded inline evaluation
+    Write-Warning "Code Gardener review failed (status: $($callback.status)). Falling back to inline evaluation."
+    $reviewOutcome = "degraded"
+} else {
+    # Parse dimension scores: match "Score: N/5" or "**Score**: N/5"
+    $scorePattern = '(?:Score|(?:\*\*Score\*\*))\s*:\s*(\d+)/5'
+    $scoreMatches = [regex]::Matches($callback.response, $scorePattern)
+    $dimensionScores = @{}
+    foreach ($m in $scoreMatches) {
+        $dimensionScores["dim_$($dimensionScores.Count)"] = [int]$m.Groups[1].Value
+    }
+    $finalScores = $dimensionScores
+
+    # Identify critical findings: any dimension scored <= 2
+    $criticalDims = $dimensionScores.GetEnumerator() | Where-Object { $_.Value -le 2 }
+    $criticalDimsList = @($criticalDims)
+
+    if ($criticalDimsList.Count -eq 0) {
+        # All dimensions > 2 — no critical findings, proceed to delivery
+        $reviewOutcome = "pass"
+    } elseif ($cycle -ge 2) {
+        # Cap reached — at most 2 cycles allowed, deliver with caveats
+        $reviewOutcome = "cap_reached"
+    } elseif ($cycle -gt 0 -and $previousScores.Count -gt 0) {
+        # Check for no-progress: scores unchanged after a fix cycle
+        $improved = $false
+        foreach ($key in $dimensionScores.Keys) {
+            if ($previousScores.ContainsKey($key) -and $dimensionScores[$key] -gt $previousScores[$key]) {
+                $improved = $true
+                break
+            }
+        }
+        if (-not $improved) {
+            # Scores same or worse — no progress, terminate early
+            $reviewOutcome = "no_progress"
+        } else {
+            # Scores improved but still have critical findings — dispatch fix
+            $previousScores = $dimensionScores.Clone()
+            $reviewOutcome = "fix_dispatched"
+        }
+    } else {
+        # First cycle with critical findings — dispatch fix
+        $previousScores = $dimensionScores.Clone()
+        $reviewOutcome = "fix_dispatched"
+    }
+}
+```
+
+**Decision matrix:**
+
+| Condition | Outcome | Next step |
+| --- | --- | --- |
+| All dimensions > 2 | `pass` | Proceed to Step 5e (record review), then Step 6 |
+| Any dimension <= 2, cycle < 2 | `fix_dispatched` | Proceed to Step 5d (dispatch fix) |
+| Cycle cap reached (cycle >= 2) | `cap_reached` | Deliver with caveats, proceed to Step 5e |
+| Scores unchanged after fix | `no_progress` | Deliver with caveats, proceed to Step 5e |
+| Code Gardener Failed or unparseable | `degraded` | Fall back to degraded inline evaluation |
+| Fixer failed | `fixer_failed` | Deliver with caveats, proceed to Step 5e |
+
+#### Step 5d — Dispatch Refactor Executor fix (conditional)
+
+If `$reviewOutcome` is `fix_dispatched`, dispatch the Refactor Executor to address critical findings.
+
+```powershell
+if ($reviewOutcome -eq "fix_dispatched") {
+    $fix = Invoke-RestMethod "$env:DISPATCHER_URL/tasks" -Method Post `
+      -Body (ConvertTo-Json @{
+          type         = "Code"
+          prompt       = "Execute fixes for the critical findings filed as issues on jehubba/daeanne-<agent-name>.`n`nWork through the open issues labeled with agent-reviewer findings.`nMake one fix per commit. Reference the issue number in each commit message.`nDo NOT close the issues — the re-review will determine if they pass.`n`nTarget: jehubba/daeanne-<agent-name>`nMode: Execute Plan"
+          parentTaskId = $env:TASK_ID
+      }) -ContentType "application/json"
+
+    # Self-suspend and await fix completion
+    Invoke-RestMethod "$env:DISPATCHER_URL/tasks/$($env:TASK_ID)/await" -Method Post `
+      -Body (ConvertTo-Json @{ subtaskId = $fix.id }) `
+      -ContentType "application/json"
+
+    exit 0
+}
+
+# On resumption from fix: read fix callback
+$fixCallback = Get-ChildItem "$env:output_path\callbacks\*.json" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$fixResult = Get-Content $fixCallback.FullName -Raw | ConvertFrom-Json
+
+if ($fixResult.status -eq "Failed") {
+    $reviewOutcome = "fixer_failed"
+} else {
+    # Fix succeeded — increment cycle and re-dispatch Code Gardener for re-review
+    $cycle++
+    # Loop back to Step 5b — re-dispatch Code Gardener
+    # (The Dispatcher will resume this task again after the re-review completes)
+}
+```
+
+After the fix cycle completes, increment `$cycle` and re-dispatch Code Gardener (return to Step 5b) for a verification re-review. The loop continues until: all scores > 2 (pass), cycle cap reached, no progress detected, or fixer failed.
+
+#### Step 5e — Record review outcome
+
+Write `docs/build-review.md` to the built agent's repo. This runs for all outcomes — normal handoff, degraded fallback, or caveated delivery.
+
+```powershell
+$today = Get-Date -Format "yyyy-MM-dd"
+$mode = if ($reviewOutcome -eq "degraded") { "degraded_inline" } else { "handoff" }
+$status = switch ($reviewOutcome) {
+    "pass"           { "passed" }
+    "degraded"       { "degraded_fallback" }
+    default          { "delivered_with_caveats" }
+}
+$dimsText = if ($criticalDimsList.Count -gt 0) { ($criticalDimsList | ForEach-Object { $_.Key }) -join ", " } else { "none" }
+$caveatsText = if ($reviewOutcome -in @("cap_reached","no_progress","fixer_failed")) {
+    "Review cycle ended with outcome: $reviewOutcome. Critical dimensions remain."
+} else { "none" }
+
+$buildReview = @"
+## Build Review — $today
+
+- **Cycles**: $cycle
+- **Final status**: $status
+- **Mode**: $mode
+- **Dimensions scored <= 2**: $dimsText
+- **Issues filed**: $totalIssuesFiled
+- **Issues resolved**: $totalIssuesResolved
+- **Caveats**: $caveatsText
+"@
+
+$buildReview | Set-Content "docs/build-review.md" -Encoding UTF8
+git add docs/build-review.md
+git commit -m "docs: add build review summary"
+git push origin main
+```
+
+> **Degraded mode fallback**: If the Dispatcher is unreachable (Step 5b catch) or the Code Gardener callback indicates `Failed` status or unparseable response (Step 5c), fall back to the following inline evaluation. The `degraded_inline` mode is recorded in `docs/build-review.md`.
+
+When running in degraded mode, evaluate against these criteria:
 
 1. **Completeness** — all required sections present and non-trivial
 2. **WHEN triggers** — specific, actionable, non-overlapping with existing skills
@@ -242,7 +462,7 @@ Invoke the `self-eval-loop` skill against the generated agent definition. Evalua
 6. **Tone alignment** — matches Daeanne OS aesthetic (direct, precise, no pleasantries)
 7. **Testability** — self-evaluation criteria are concrete and verifiable
 
-If score < 4/7, iterate. If score 4–6/7, document gaps and deliver with caveats. If 7/7, deliver.
+If score < 4/7, iterate. If score 4–6/7, document gaps and deliver with caveats. If 7/7, deliver. Use the same pass/fail logic as the original Step 5. Document the fallback in caveats.
 
 ### Step 6 — Commit and deliver
 
